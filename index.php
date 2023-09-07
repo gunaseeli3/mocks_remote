@@ -7,7 +7,7 @@ include("config.ini.php");
  
 $current_page = $_SERVER['REQUEST_URI'];
 
-session_start();
+session_start();//start session
 $mi_nombre=$_COOKIE['name'];
 $mi_usuario=$_COOKIE['user'];
 $mi_pass=$_COOKIE['pass'];
