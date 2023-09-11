@@ -1,7 +1,7 @@
 
 <div class="col-sm-12">
     <div class="card">
-    <div class="card-header" style="display: contents;">  
+        <div class="card-header" style="display: contents;">
              
                 <h2>CARGA MASIVA DE SENSORES CON UNO O MAS CERTIFICADOS</h2>
                  
@@ -47,8 +47,6 @@
                         <span class="error-count unknown-sensor-type-error-count text-success"><strong>0</strong></span><br>
                         <span class="text-dark"> Lista de certificados no asociados:</span>
                         <span class="error-count unassociated-certificates-count text-success"><strong>N/A</strong></span><br>
-                        <span class="text-dark">Error de tipo desconocido:</span>
-                        <span class="error-count unknown-tipo-error-count text-success"><strong>0</strong></span><br>
                     </div>
 
                     <div class="error-messages"></div>
@@ -64,7 +62,6 @@
                             <td><strong>Emitido el</strong></td>
                             <td><strong>Vence el</strong></td>
                             <td><strong>Estado</strong></td>
-                            <td><strong>Tipo</strong></td>
                         </tr>
                     </thead>
                     <tbody>
@@ -207,10 +204,6 @@ $(document).ready(function () {
                     $(".unassociated-certificates-count").text("N/A");
                 }
 
-                   // Update the tipo-related counts and error message
-                    $('.unknown-tipo-error-count strong').text(data.unknownTipoError);
-                    $('.tipo-error-message').text(data.unknownTipoErrorMessage);
-
  
     if (data.errorMessages.length === 0 && data.unassociatedCertificates.length === 0 && data.errorMessages.length === 0) {
         // No errors, hide the "Upload files" button and show the "Process" button
@@ -257,7 +250,6 @@ for (var i = 0; i < certificates.length; i++) {
         '<td>' + certificate.emitido_el + '</td>' +
         '<td>' + certificate.vence_el + '</td>' +
         '<td>' + certificate.estado + '</td>' +
-        '<td>' + certificate.tipo + '</td>' +
         '</tr>';
 
     $("#dataGrid tbody").append(rowHtml);

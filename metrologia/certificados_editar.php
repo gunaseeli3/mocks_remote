@@ -13,6 +13,7 @@
  $certificateId= $idcert;
  $_SESSION["status"] ='';
  $_SESSION["cms_msg"] ='';
+ 
 
  
     function updateDatabaseAndBacktrack($certificateId, $sensorId, $tipo, $movedFileUrls) {

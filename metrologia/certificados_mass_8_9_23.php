@@ -1,13 +1,24 @@
+<?php
+require_once 'Classes/PHPExcel.php';
+$carga=$_GET["k"];
+$sensor_id = $_REQUEST['s'];
+$sensor_existid = '';
+if (isset($_REQUEST["s"]) && $_REQUEST["s"] != '') {
+    $sensor_existid = $_REQUEST["s"];
+    $sql3 = "SELECT * FROM sensores WHERE id_sensor='$sensor_existid'";
+    $res3 = $db_cms->select_query_with_row($sql3);
+
+    $mi_sensor = $res3['nombre'];
+}
+?>
 
 <div class="col-sm-12">
     <div class="card">
-    <div class="card-header" style="display: contents;">  
-             
-                <h2>CARGA MASIVA DE SENSORES CON UNO O MAS CERTIFICADOS</h2>
-                 
+        <div class="card-header" style="display: contents;">            
+            <h2>Carga masiva de certificados por archivo Excel para el sensor <?php echo $mi_sensor; ?></h2>
             <div class="btn-actions-pane-right">
-                <a href="templates/metrologia/ejemplo-sensores.xlsx" target="_blank" class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-primary"><i class="fa-regular fa-file-excel btn-icon-wrapper"></i> Ejemplo Excel</a>
-                <a href="index.php?module=13&page=12" class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-danger"><i class="fa-solid fa-x btn-icon-wrapper"></i> Cancelar</a>
+                <a href="templates/metrologia/ejemplo.xlsx" target="_blank" class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-primary"><i class="fa-regular fa-file-excel btn-icon-wrapper"></i> Ejemplo Excel</a>
+                <a href="index.php?module=13&page=7&s=<?php echo $sensor_id; ?>&k=0" class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-danger"><i class="fa-solid fa-x btn-icon-wrapper"></i> Cancelar</a>
             </div>
         </div>
         <div class="card-body">
@@ -47,8 +58,6 @@
                         <span class="error-count unknown-sensor-type-error-count text-success"><strong>0</strong></span><br>
                         <span class="text-dark"> Lista de certificados no asociados:</span>
                         <span class="error-count unassociated-certificates-count text-success"><strong>N/A</strong></span><br>
-                        <span class="text-dark">Error de tipo desconocido:</span>
-                        <span class="error-count unknown-tipo-error-count text-success"><strong>0</strong></span><br>
                     </div>
 
                     <div class="error-messages"></div>
@@ -64,7 +73,6 @@
                             <td><strong>Emitido el</strong></td>
                             <td><strong>Vence el</strong></td>
                             <td><strong>Estado</strong></td>
-                            <td><strong>Tipo</strong></td>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,7 +89,7 @@
 <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"> -->
 <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
 <script src="https://netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
- 
+<
 <script type="text/javascript" src="scripts/jquery.progresstimer.js"></script>
 
 <style>
@@ -160,7 +168,7 @@ $(document).ready(function () {
 
     // Create the AJAX request
     $.ajax({
-        url: "templates/metrologia/includes/proceso_multiple.php?mod=check",
+        url: "templates/metrologia/includes/proceso_unique.php?sensor_id=<?php echo $sensor_id; ?>&mod=check",
         type: "POST",
         data: formData,
         processData: false,
@@ -207,12 +215,8 @@ $(document).ready(function () {
                     $(".unassociated-certificates-count").text("N/A");
                 }
 
-                   // Update the tipo-related counts and error message
-                    $('.unknown-tipo-error-count strong').text(data.unknownTipoError);
-                    $('.tipo-error-message').text(data.unknownTipoErrorMessage);
-
  
-    if (data.errorMessages.length === 0 && data.unassociatedCertificates.length === 0 && data.errorMessages.length === 0) {
+    if (data.errorMessages.length === 0 && data.unassociatedCertificates.length === 0) {
         // No errors, hide the "Upload files" button and show the "Process" button
         $("#processButton").hide();
         $("#process").show();
@@ -257,7 +261,6 @@ for (var i = 0; i < certificates.length; i++) {
         '<td>' + certificate.emitido_el + '</td>' +
         '<td>' + certificate.vence_el + '</td>' +
         '<td>' + certificate.estado + '</td>' +
-        '<td>' + certificate.tipo + '</td>' +
         '</tr>';
 
     $("#dataGrid tbody").append(rowHtml);
@@ -305,7 +308,7 @@ for (var i = 0; i < certificates.length; i++) {
 
         // Create the AJAX request for processing
         $.ajax({
-            url: "templates/metrologia/includes/proceso_multiple.php?mod=process",
+            url: "templates/metrologia/includes/proceso_unique.php?sensor_id=<?php echo $sensor_id; ?>&mod=process",
             type: "POST",
             data: formData,
             processData: false,
