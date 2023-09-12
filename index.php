@@ -6,7 +6,12 @@ ob_start(); //ob start call
 include("config.ini.php");
  //A added
  //B added
+<<<<<<< Updated upstream
  //update another one
+=======
+ //working on develop
+ //working some other
+>>>>>>> Stashed changes
 $current_page = $_SERVER['REQUEST_URI'];
 
 session_start();//start session
