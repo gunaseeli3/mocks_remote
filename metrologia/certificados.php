@@ -1,7 +1,7 @@
 <?php
 
 
-//error_reporting(E_ALL);//
+//error_reporting(E_ALL);//error report
 //ini_set('display_errors', 1);
 
  $current_page = $_SERVER['REQUEST_URI'];
