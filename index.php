@@ -5,6 +5,7 @@ error_reporting(0); //develop changes
 ob_start(); //ob start call
 include("config.ini.php");
  //C added
+  //D added
 $current_page = $_SERVER['REQUEST_URI'];
 
 session_start();//start session
