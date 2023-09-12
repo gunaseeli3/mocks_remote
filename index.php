@@ -1,8 +1,13 @@
 <?php  
 ////// DESDE VISUAL A CERNET   DESCE CERNET a Visua test
 //LLAMADA AL ARCHIVO PRINCIPAL DE ACCESO A BASE DE DATOS E INTEGRACION DE SMARTY
+<<<<<<< HEAD
 error_reporting(0); //develop changes
 ob_start(); //ob start call
+=======
+error_reporting(0);//new changes
+ob_start();
+>>>>>>> ca9bc34 (updated index page)
 include("config.ini.php");
  
 $current_page = $_SERVER['REQUEST_URI'];
