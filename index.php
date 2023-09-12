@@ -6,6 +6,7 @@ ob_start(); //ob start call
 include("config.ini.php");
  //A added
  //B added
+ 
 $current_page = $_SERVER['REQUEST_URI'];
 
 session_start();//start session
