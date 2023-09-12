@@ -9,9 +9,14 @@ include("config.ini.php");
 <<<<<<< Updated upstream
  //update another one
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
  //working on develop
  //working some other
+>>>>>>> Stashed changes
+=======
+
+ //update fot git stash
 >>>>>>> Stashed changes
 =======
 
