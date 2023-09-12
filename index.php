@@ -6,8 +6,12 @@ error_reporting(0); //develop changes
 ob_start(); //ob start call
 =======
 error_reporting(0);//new changes
+<<<<<<< HEAD
 ob_start();
 >>>>>>> ca9bc34 (updated index page)
+=======
+ob_start(); //ob start
+>>>>>>> d8f672e (new changes)
 include("config.ini.php");
  
 $current_page = $_SERVER['REQUEST_URI'];
