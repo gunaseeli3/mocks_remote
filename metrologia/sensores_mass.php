@@ -407,7 +407,7 @@ if (response.errorMessages.length === 0 && response.duplicatedSensorsInFile.leng
         });
         errorMessageHtml += "</ul>";
         
-        $(".error-messages").removeClass("text-success").addClass("text-danger").text(errorMessageHtml);
+        $(".error-messages").removeClass("text-success").addClass("text-danger").html(errorMessageHtml);
 
     } else {
         $(".error-messages").removeClass("text-danger").addClass("text-success").html("Todos los Sensores han sido procesados exitosamente");

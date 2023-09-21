@@ -15,9 +15,26 @@ if (!empty($_POST["submit_action"]) && !empty($_POST["add_action"])) {
         }
     }
 
-    $res = $db_cms->add_query($field, $table_name);
+    
+// Check if the combination of Sensor and certificado already exists
+$sql_combination_check = "SELECT * FROM sensores WHERE nombre='{$_POST['nombre']}' ";
+$combination_exists = $db_cms->count_query($sql_combination_check);
+
+if ($combination_exists > 0) {
+    $_SESSION["cms_status"] = "error";
+    $_SESSION["cms_msg"] = "Sensor ya existe";
+    header('Location:' . $current_page);
+    exit();
+}
+
+
+    $res = $db_cms->add_query1($field, $table_name);
 
     if ($res !== FALSE) {
+
+        // Extract the Sensor ID (assuming it's coming from a form input, replace 'sensor_id' with the actual input name)
+        $sensor_id = $res;
+
             
         // Construct the description for the backtrack record
                       
@@ -40,6 +57,7 @@ if (!empty($_POST["submit_action"]) && !empty($_POST["add_action"])) {
         $field6_value = "AÑADIR SENSOR";
 
         $description = "$user has $action on $date_time_action <br>"
+            . "Sensor ID - $sensor_id<br>" 
             . "$field1 - $field1_value<br>"
             . "$field2 - $field2_value<br>"
             . "$field3 - $field3_value<br>"

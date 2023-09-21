@@ -20,9 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $inconsistentDatesError = 0;
     $dateFormatError = 0;
     $unknownSensorTypeError = 0;
+    $unknownTipoError = 0; 
     $unassociatedCertificates = array();
     $errorMessages = array();
     $uploadError = false;
+         // Calculate the next index for Secundario files
+         $next_secundario_index = 2; // Default starting index for Secundario files
+         $next_vencido_index =2;// Default starting index for Vencido files
     
 
     // Process Excel file
@@ -64,21 +68,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Get row values
              
             $sensor_id = $_GET["sensor_id"];                         
-            $certificate = $rowData->current()->getValue();
+            $certificate = trim($rowData->current()->getValue());
             if ($certificate === null || trim($certificate) === '') {
                 // Skip processing this row and move to the next iteration
                 continue;
             }
             $rowData->next(); // Move to the next cell
-            $magnitude = $rowData->current()->getValue();
+            $magnitude = trim($rowData->current()->getValue());
             $rowData->next();
-            $issuedDate = $rowData->current()->getValue();
+            $issuedDate = trim($rowData->current()->getValue());
             $rowData->next();
-            $expiresDate = $rowData->current()->getValue();
+            $expiresDate = trim($rowData->current()->getValue());
             $rowData->next();
-            $status = $rowData->current()->getValue();
+            $status = trim($rowData->current()->getValue());
             $rowData->next();
-            $country = $rowData->current()->getValue();
+            $country = trim($rowData->current()->getValue());
+            $rowData->next();
+            $tipo = trim($rowData->current()->getValue()); //get the "Tipo" value
+
 
              // Determine the sensor_id to use for this row
             
@@ -121,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $issuedDateFormatted = date('d-m-Y', $issuedDate);
     $expiresDateFormatted = date('d-m-Y', $expiresDate);
 
+     
                  
     // Validate dates format
             if (!isValidDateFormat($issuedDateFormatted) || !isValidDateFormat($expiresDateFormatted)) {
@@ -146,6 +154,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $unknownSensorTypeError++;
             }
 
+            if (!in_array($tipo, array("Primario", "Secundario", "Vencido"))) {
+    $unknownTipoError++; // Increment unknownTipoError counter
+     
+    // Add the error message to the response array 
+    $uploadError = true;  
+    $errorMessages[]= "Tipo desconocido en fila $totalCertificates: '$tipo'. Los valores válidos son 'Primario', 'Secundario' o 'Vencido'.";
+}
+
+
 
 
 
@@ -157,7 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'emitido_el' => $issuedDateFormatted, // Use the formatted date
                 'vence_el' => $expiresDateFormatted,
                 'estado' => $status,
-                'pais' => $country
+                'pais' => $country,
+                'tipo' => $tipo
             );
     
             // Push the certificate data into the certificates array
@@ -189,7 +207,7 @@ if ($res_cnt > 0) {
 $errorMessages_cnt=count($errorMessages);
 
 // Check if error counters are equal to 0
-if ($mod=='process' && $errorMessages_cnt === 0  && $unassociated === 0  && $incompleteDataError === 0 && $inconsistentDatesError === 0 && $dateFormatError === 0 && $unknownSensorTypeError === 0) {
+if ($mod=='process' && $errorMessages_cnt === 0  && $unassociated === 0  && $incompleteDataError === 0 && $inconsistentDatesError === 0 && $dateFormatError === 0 && $unknownSensorTypeError === 0 && $unknownTipoError === 0) {
            
     
     $c=0;
@@ -206,6 +224,7 @@ if ($mod=='process' && $errorMessages_cnt === 0  && $unassociated === 0  && $inc
         $fecha_vencimiento = $certificate['vence_el'];
         $estado = $certificate['estado'];
         $pais = $certificate['pais'];
+        $tipo = $certificate['tipo'];
 
        
 
@@ -249,7 +268,18 @@ if (!file_exists($uploadDir)) {
     }
 }
 
-  $destination = $uploadDir . '/' . $expectedPdfFileName;
+// Construct the file name based on the "Tipo"
+if ($tipo === 'Primario') {
+    $fileName = "{$certificado}.pdf";
+} elseif ($tipo === 'Secundario') {
+    $fileName = "{$certificado}_{$next_secundario_index}.pdf";
+    $next_secundario_index++;
+} elseif ($tipo === 'Vencido') {
+    $fileName = "{$certificado}_{$next_vencido_index}.pdf";
+    $next_vencido_index++;
+}
+
+  $destination = $uploadDir . '/' . $fileName;
  
  
  
@@ -260,6 +290,17 @@ if (!$movefile) {
     $uploadError = true;
     $errorMessages[] = "Error al mover el archivo PDF cargado para el certificado '{$certificado}'.";
   
+}else{
+ // Insert information about the moved file into sensores_certicados_ficheros table
+ $insertFileData = array(
+    'id_sensor' => $sensor_id,
+    'id_certificado' => $certificateId,
+    'tipo' => $tipo,
+    'nombre_archivo' => $fileName
+);
+
+$res_insert_file = $db_cms->add_query1($insertFileData, 'sensores_certicados_ficheros');
+    
 }
 
             
@@ -270,7 +311,7 @@ if (!$movefile) {
             $date_time_action = date('Y-m-d H:i:s'); // Current date and time
 
             // Add more fields and values as needed
-            $field1 = "Sensor";
+            $field1 = "Sensor ID";
             $field1_value = $sensor_id;
             $field2 = "Nombre del certificado";
             $field2_value = $certificado;
@@ -286,9 +327,12 @@ if (!$movefile) {
             $field7_value = $certificateId;
             $field8 = "página";
             $field8_value = "CARGA MASIVA DE CERTIFICADOS";
+            $field9 = "Tipo";
+            $field9_value = $tipo;
             
 
-            $url = "templates/certificados/{$sensor_id}/{$certificado}.pdf";
+            //$url = "templates/certificados/{$sensor_id}/{$fileName}";
+            $url = $fileName;
             $description = "$user $action el $date_time_action <br>"
                 . "$field1 - $field1_value<br>"
                 . "$field2 - $field2_value<br>"
@@ -298,7 +342,8 @@ if (!$movefile) {
                 . "$field6 - $field6_value<br>"
                 . "$field7 - $field7_value<br>"
                 . "$field8 - $field8_value<br>"
-                . "Tipo de archivo - Primario<br>"
+                . "$field9 - $field9_value<br>" 
+                . "Tipo de archivo - $tipo<br>"                
                 . "URL - $url<br>";
 
                 $certificates[$c]['url']=$url;
@@ -347,7 +392,8 @@ $response = array(
     'dateFormatError' => $dateFormatError,
     'unknownSensorTypeError' => $unknownSensorTypeError,
     'unassociatedCertificates' => $unassociatedCertificates,
-    'certificates' => $certificates   
+    'certificates' => $certificates,
+    'unknownTipoError' => $unknownTipoError
 );
 
 echo json_encode($response);

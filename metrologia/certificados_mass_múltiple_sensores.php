@@ -211,9 +211,15 @@ $(document).ready(function () {
                     $('.unknown-tipo-error-count strong').text(data.unknownTipoError);
                     $('.tipo-error-message').text(data.unknownTipoErrorMessage);
 
- 
-    if (data.errorMessages.length === 0 && data.unassociatedCertificates.length === 0 && data.errorMessages.length === 0) {
-        // No errors, hide the "Upload files" button and show the "Process" button
+                    if (
+  data.incompleteDataError === 0 &&
+  data.dateFormatError == 0 &&
+  data.inconsistentDatesError === 0 &&
+  data.unknownSensorTypeError === 0 &&
+  data.errorMessages.length === 0 &&
+  data.unassociatedCertificates.length === 0 &&
+  data.errorMessages.length === 0
+) {   // No errors, hide the "Upload files" button and show the "Process" button
         $("#processButton").hide();
         $("#process").show();
     } else {
@@ -345,7 +351,7 @@ for (var i = 0; i < certificates.length; i++) {
             errorMessageHtml += "<li>" + errorMessage + "</li>";
         });
         errorMessageHtml += "</ul>";
-        $(".error-messages").removeClass("text-success").addClass("text-danger").text(errorMessageHtml);
+        $(".error-messages").removeClass("text-success").addClass("text-danger").html(errorMessageHtml);
 
        // $(".error-messages").html(errorMessageHtml);
     } else {

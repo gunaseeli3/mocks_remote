@@ -88,12 +88,17 @@ if (!empty($result_certificates)) {
 $n=$i+1;
         echo "
         <div class='card'>
-        <div id='headingOne' class='card-header' >
-        <button type='button' data-toggle='collapse' data-target='#collapseOne_$ides' aria-expanded='true' aria-controls='collapseOne' class='text-left m-0 p-0 btn btn-link btn-block'>
-            
+        <div id='headingOne' class='card-header'>
+        <button type='button' data-toggle='collapse' data-target='#collapseOne_$ides' aria-expanded='true' aria-controls='collapseOne' class='text-left m-0 p-0 btn btn-link btn-block custom-button-width'>
             <h5 class='m-0 p-0'>$n - $certif</h5>
+        </button>
+        <a href='index.php?module=13&page=6&s={$cid}&idcert={$ides}'>
+            <button class='mb-1 mr-1 btn-icon btn-shadow btn-outline-2x btn btn-outline-success'>
+                <i class='fa fa-pen'></i> Editar
             </button>
+        </a>
     </div>
+    
             <div data-parent='#accordion' id='collapseOne_$ides' aria-labelledby='headingOne' class='collapse $expand'>
                 <div class='card-body'>
                     
@@ -249,7 +254,7 @@ else {
             $.ajax({
                 url: 'templates/metrologia/includes/get_audit_log.php',
                 type: 'GET',
-                data: { page: page },
+                data: { page: page, s: '<?php echo $cid; ?>' },
                 success: function (data) {
                     $('#accordion2').html(data.entries);
                     $('#pagination2').html(data.pagination);
@@ -337,5 +342,10 @@ else {
     color: #fff;
     border-color: #007bff;
 }
+
+.custom-button-width {
+    width: 75%;
+}
+
 
     </style>

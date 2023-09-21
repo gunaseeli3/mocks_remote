@@ -7,6 +7,7 @@ include("config.ini.php");
  //A added
  //B added
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
  //update another one
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -21,6 +22,10 @@ include("config.ini.php");
 =======
 
  //update fot git stash
+>>>>>>> Stashed changes
+=======
+ //working on develop
+ //working some other
 >>>>>>> Stashed changes
 $current_page = $_SERVER['REQUEST_URI'];
 

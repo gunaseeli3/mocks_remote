@@ -42,18 +42,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rowData = $row->getCellIterator();
 
             // Get row values
-            $sensorName = $rowData->current()->getValue();
+            $sensorName = trim($rowData->current()->getValue());
             if ($sensorName === null || trim($sensorName) === '') {
                 // Skip processing this row and move to the next iteration
                 continue;
             }
 
             $rowData->next();
-            $sensorSerial = $rowData->current()->getValue();
+            $sensorSerial = trim($rowData->current()->getValue());
             $rowData->next();
-            $sensorType = $rowData->current()->getValue();
+            $sensorType = trim($rowData->current()->getValue());
             $rowData->next();
-            $sensorCountry = $rowData->current()->getValue();
+            $sensorCountry = trim($rowData->current()->getValue());
 
             // Validate and process row data
             $totalSensors++;
@@ -143,7 +143,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $field6 = "Página";
                     $field6_value = "CARGA MASIVA DE SENSORES";
 
+                    $sensor_id = $res;
+
                     $description = "$user $action el $date_time_action <br>"
+                        . "Sensor ID - $sensor_id<br>"     
                         . "$field1 - $field1_value<br>"
                         . "$field2 - $field2_value<br>"
                         . "$field3 - $field3_value<br>"

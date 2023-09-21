@@ -14,7 +14,7 @@ if (isset($_REQUEST["s"]) && $_REQUEST["s"] != '') {
 
 <div class="col-sm-12">
     <div class="card">
-        <div class="card-header">             
+    <div class="card-header" style="display: contents;">            
             <h2>Carga masiva de certificados por archivo Excel para el sensor <?php echo $mi_sensor; ?></h2>
             <div class="btn-actions-pane-right">
                 <a href="templates/metrologia/ejemplo.xlsx" target="_blank" class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-primary"><i class="fa-regular fa-file-excel btn-icon-wrapper"></i> Ejemplo Excel</a>
@@ -58,6 +58,8 @@ if (isset($_REQUEST["s"]) && $_REQUEST["s"] != '') {
                         <span class="error-count unknown-sensor-type-error-count text-success"><strong>0</strong></span><br>
                         <span class="text-dark"> Lista de certificados no asociados:</span>
                         <span class="error-count unassociated-certificates-count text-success"><strong>N/A</strong></span><br>
+                        <span class="text-dark">Error de tipo desconocido:</span>
+                        <span class="error-count unknown-tipo-error-count text-success"><strong>0</strong></span><br>
                     </div>
 
                     <div class="error-messages"></div>
@@ -73,6 +75,7 @@ if (isset($_REQUEST["s"]) && $_REQUEST["s"] != '') {
                             <td><strong>Emitido el</strong></td>
                             <td><strong>Vence el</strong></td>
                             <td><strong>Estado</strong></td>
+                            <td><strong>Tipo</strong></td>
                         </tr>
                     </thead>
                     <tbody>
@@ -215,8 +218,14 @@ $(document).ready(function () {
                     $(".unassociated-certificates-count").text("N/A");
                 }
 
+
+                // Update the tipo-related counts and error message
+    $('.unknown-tipo-error-count strong').text(data.unknownTipoError);
+    $('.tipo-error-message').text(data.unknownTipoErrorMessage);
+
+
  
-    if (data.errorMessages.length === 0 && data.unassociatedCertificates.length === 0) {
+    if (data.incompleteDataError === 0 && data.dateFormatError == 0 &&  data.inconsistentDatesError === 0 && data.errorMessages.length === 0 && data.unassociatedCertificates.length === 0) {
         // No errors, hide the "Upload files" button and show the "Process" button
         $("#processButton").hide();
         $("#process").show();
@@ -261,6 +270,7 @@ for (var i = 0; i < certificates.length; i++) {
         '<td>' + certificate.emitido_el + '</td>' +
         '<td>' + certificate.vence_el + '</td>' +
         '<td>' + certificate.estado + '</td>' +
+        '<td>' + certificate.tipo + '</td>' +
         '</tr>';
 
     $("#dataGrid tbody").append(rowHtml);
@@ -348,7 +358,7 @@ for (var i = 0; i < certificates.length; i++) {
             errorMessageHtml += "<li>" + errorMessage + "</li>";
         });
         errorMessageHtml += "</ul>";
-        $(".error-messages").removeClass("text-success").addClass("text-danger").text(errorMessageHtml);
+        $(".error-messages").removeClass("text-success").addClass("text-danger").html(errorMessageHtml);
 
        // $(".error-messages").html(errorMessageHtml);
     } else {
@@ -400,6 +410,7 @@ $("#resetButton").click(function () {
         $(".date-format-error-count").text("0");
         $(".unknown-sensor-type-error-count").text("0");
         $(".unassociated-certificates-count").text("N/A");
+        
 
         // Reset file input styling
         $("input[type='file']").removeClass("is-invalid");
