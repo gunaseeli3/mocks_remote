@@ -1,4 +1,7 @@
 <?php
+
+
+ 
 // Check if a sensor ID is provided in the request
  $sensor_existid = '';
  if (isset($_REQUEST["s"]) && $_REQUEST["s"] != '') {
@@ -19,6 +22,13 @@ if (!empty($_POST["add_action"])) {
     $field = array();
     $pais = $_REQUEST['pais'];
 
+   // Modify 'tipo' based on 'estado'
+   if ($_POST['estado'] == "Vencido") {
+    $_POST['tipo'] = 'Vencido';
+}
+
+
+
     // Check if the combination of Sensor and certificado already exists
     $sql_combination_check = "SELECT * FROM sensores_certificados WHERE id_sensor='{$_POST['selected_sensor_id']}' AND certificado='{$_POST['certificado']}'";
     $combination_exists = $db_cms->count_query($sql_combination_check);
@@ -33,6 +43,7 @@ if (!empty($_POST["add_action"])) {
     // Insert data into the database
     $_POST['id_sensor'] = $_POST['selected_sensor_id']; // hidden id
 
+    
     $fields_to_check = array("id_sensor", "certificado", "fecha_emision", "fecha_vencimiento", "pais", "estado");
     foreach ($fields_to_check as $field_name) {
         if (!empty($_POST[$field_name])) {
@@ -72,6 +83,8 @@ if (!empty($_POST["add_action"])) {
         $next_secundario_index = 2; // Default starting index for Secundario files
         $next_vencido_index =2;// Default starting index for Vencido files
 
+       
+
         if ($fileCount > 0) {
 
             $uploadDir = dirname(__FILE__) . '/../../templates/certificados/' . $sensorId;
@@ -106,7 +119,8 @@ if (!empty($_POST["add_action"])) {
 
                 if ($movefileResult) {
                     // Add the URL of the moved file to the array
-                    $movedFileUrls[] = "templates/certificados/{$sensorId}/{$fileName}";
+                    //$movedFileUrls[] = "templates/certificados/{$sensorId}/{$fileName}";
+                    $movedFileUrls[] = $fileName;
 
                     // Insert information about the moved file into sensores_certicados_ficheros table
                     $insertFileData = array(
@@ -138,7 +152,7 @@ if (!empty($_POST["add_action"])) {
         $date_time_action = date('Y-m-d H:i:s'); // Current date and time
 
         // Add more fields and values as needed
-        $field1 = "Sensor";
+        $field1 = "Sensor ID"; 
         $field1_value = $_POST['id_sensor'];
         $field2 = "Nombre del certificado";
         $field2_value = $_POST['certificado'];
@@ -233,7 +247,8 @@ if (!empty($_SESSION["cms_status"]) && !empty($_SESSION["cms_msg"])) {
                     <div class="col-md-8">
                             <div class="position-relative form-group"><label for="exampleEmail11" class="">Nombre del Sensor</label>
                             <input type="hidden" id="selected_sensor_id" name="selected_sensor_id" value="<?php echo $sensor_existid?>">
-                            <input  type="text" id="sensor_dropdown" name="id_sensor" list="sensor_list" placeholder="Search for a sensor" required class="form-control" value="<?php echo $mi_sensor?>">
+                            <input <?php if($sensor_existid){ ?> readonly <?php } ?> type="text" id="sensor_dropdown" name="id_sensor" list="sensor_list" placeholder="Search for a sensor" required class="form-control" value="<?php echo $mi_sensor?>">
+
                             <datalist id="sensor_list"></datalist>
 
                         </div>
@@ -273,7 +288,7 @@ if (!empty($_SESSION["cms_status"]) && !empty($_SESSION["cms_msg"])) {
     <p>Elija el tipo de certificado:</p>
     <input type="radio" name="tipo" value="Primario" > Primario
     <input type="radio" name="tipo" value="Secundario"> Secundario
-    <input type="radio" name="tipo" value="Vencido"> Vencido
+   
     
 </div>
                         </div>
@@ -329,28 +344,31 @@ if (!empty($_SESSION["cms_status"]) && !empty($_SESSION["cms_msg"])) {
         });
     
 
-
-    
-
-    // Show confirmation modal when file input changes
-    $('input[type="file"]').on('change', function() {
-        var $fileInput = $(this);
-        
-       
-        if ($fileInput.val() !== '' ) {
-            if (!$('input[name="tipo"]:checked').length) {
+        // Check if a PDF file is selected
+        if ($('#pdf_file')[0].files.length > 0) {
+    // At least one file is selected
+    // Check other conditions and handle accordingly
+    var estado = $('select[name="estado"]').val();
+     
+    if (estado === 'Vencido') {
+        // Allow form submission
+        return;
+    } else if (!$('input[name="tipo"]:checked').length) {
+        // If no tipo is selected and estado is not "Vencido," alert the user and prevent form submission
         alert("Seleccione el tipo de certificado.");
-        return false;
+        e.preventDefault();
+        return;
     }
-           
-        }
-    });
+}
+
+
+   
     
     // Handle user's choice in confirmation modal
     $('#confirmUploadButton').click(function() {
-        alert('Certificado primario elegido.');
+        //alert('Certificado primario elegido.');
    
-    $('#form1').submit(); // Allow form submission
+     $('#form1').submit(); // Allow form submission
 });
 
 // Reset the file input value when modal is closed

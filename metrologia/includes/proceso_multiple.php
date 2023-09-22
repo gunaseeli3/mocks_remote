@@ -69,27 +69,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              
             // Get row values
              
-            $sensor_id_from_excel = $rowData->current()->getValue();
+            $sensor_id_from_excel = trim($rowData->current()->getValue());
             // Check if the first cell's data (sensor ID) is null or empty
     
     if ($sensor_id_from_excel === null || trim($sensor_id_from_excel) === '') {
         // Skip processing this row and move to the next iteration
-        continue;
+       // continue;
     }
             $rowData->next(); // Move to the next cell             
-            $certificate = $rowData->current()->getValue();
+            $certificate = trim($rowData->current()->getValue());
             $rowData->next(); // Move to the next cell
-            $magnitude = $rowData->current()->getValue();
+            $magnitude = trim($rowData->current()->getValue());
             $rowData->next();
-            $issuedDate = $rowData->current()->getValue();
+            $issuedDate = trim($rowData->current()->getValue());
             $rowData->next();
-            $expiresDate = $rowData->current()->getValue();
+            $expiresDate = trim($rowData->current()->getValue());
             $rowData->next();
-            $status = $rowData->current()->getValue();
+            $status = trim($rowData->current()->getValue());
             $rowData->next();
-            $country = $rowData->current()->getValue();
+            $country = trim($rowData->current()->getValue());
             $rowData->next();
-            $tipo = $rowData->current()->getValue(); //get the "Tipo" value
+            $tipo = trim($rowData->current()->getValue()); //get the "Tipo" value
 
              // Determine the sensor_id to use for this row
             
@@ -97,6 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                $sensor_result = $db_cms->select_query_with_row($sql2);
                 $sensor_id=$sensor_result['id_sensor'];
                 $getsensorname=$sensor_result['nombre'];
+
+                if (empty($sensor_id)) {
+                    $uploadError = true;  
+                    $errorMessages[] = "Sensor '$sensor_id_from_excel' no se encontró en la base de datos.";
+                }
                  
              
  
@@ -113,12 +118,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdfCertificateFound = false;
                 $expectedPdfFileName = $certificate . ".pdf"; // Expected PDF file name
                 
+ 
+
                  // Loop through uploaded PDF files to check for association
                 foreach ($_FILES['pdfFiles']['name'] as $uploadedPdfFileName) {
                     if ($uploadedPdfFileName === $expectedPdfFileName) {
                         $pdfCertificateFound = true;
                         break;
                     }
+                    
                 }
                 
                 // If expected PDF file name not found, add to unassociated certificates
@@ -173,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $certificateData = array(
                 'sensor_id' => $sensor_id,
-                'getsensorname' => $getsensorname,
+                'getsensorname' => $sensor_id_from_excel,
                 'certificado' => $certificate,
                 'magnitud' => $magnitude,
                 'emitido_el' => $issuedDateFormatted, // Use the formatted date
@@ -316,7 +324,7 @@ if (!$movefile) {
             $date_time_action = date('Y-m-d H:i:s'); // Current date and time
 
             // Add more fields and values as needed
-            $field1 = "Sensor";
+            $field1 = "Sensor ID";
             $field1_value = $sensor_id;
             $field2 = "Nombre del certificado";
             $field2_value = $certificado;
@@ -331,12 +339,13 @@ if (!$movefile) {
             $field7 = "ID";
             $field7_value = $certificateId;
             $field8 = "página";
-            $field8_value = "CARGA MASIVA DE CERTIFICADOS";            
+            $field8_value = "CARGA MASIVA DE SENSORES CON UNO O MAS CERTIFICADOS";            
             $field9 = "Tipo";
             $field9_value = $tipo;
             
 
-            $url = "templates/certificados/{$sensor_id}/{$fileName}";
+            //$url = "templates/certificados/{$sensor_id}/{$fileName}";
+            $url = $fileName;
             $description = "$user $action el $date_time_action <br>"
                 . "$field1 - $field1_value<br>"
                 . "$field2 - $field2_value<br>"

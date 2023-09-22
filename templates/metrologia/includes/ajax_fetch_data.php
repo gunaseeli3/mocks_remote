@@ -41,7 +41,7 @@ $searchArray = array();
 $searchQuery = "";
  
 // Total number of records without filtering
-$records = $db_cms->select_query_with_row("SELECT COUNT(DISTINCT id_sensor) AS allcount FROM $table_name");
+$records = $db_cms->select_query_with_row("SELECT COUNT(DISTINCT s.id_sensor) AS allcount FROM sensores s");
 $totalRecords = $records['allcount'];
 
 // Total number of records with filtering
@@ -72,7 +72,7 @@ if ($pagename == 'certifacados') {
         $query .= " AND (sc.id_certificado LIKE '%" . $searchValue . "%' OR s.id_sensor LIKE '%" . $searchValue . "%' OR s.nombre LIKE '%" . $searchValue . "%' OR s.serie LIKE '%" . $searchValue . "%' OR sc.estado LIKE '%" . $searchValue . "%' OR sc.certificado LIKE '%" . $searchValue . "%' OR sc.fecha_vencimiento LIKE '%" . $searchValue . "%') ";
     }
 
-       $query .= $whereCondition . " ORDER BY " . $columnName . " " . $columnSortOrder . " LIMIT " . $row . "," . $rowperpage;
+       $query .= $whereCondition . " group by s.id_sensor ORDER BY " . $columnName . " " . $columnSortOrder . " LIMIT " . $row . "," . $rowperpage;
 }
 
  else {
@@ -85,9 +85,10 @@ if ($pagename == 'certifacados') {
  
 $empRecords = $db_cms->select_query($query);
 
-$records = $db_cms->select_query_with_row("SELECT COUNT(DISTINCT id_sensor) AS allcount FROM $table_name WHERE 1 " . $whereCondition);
-$totalRecordwithFilter = $records['allcount'];
-
+//$records = $db_cms->select_query_with_row("SELECT COUNT(DISTINCT id_sensor) AS allcount FROM $table_name WHERE 1 " . $whereCondition);
+//$totalRecordwithFilter = $records['allcount'];
+// Get the total count including filters
+$totalRecordwithFilter = $totalRecords; // Use the totalRecords calculated above
   
  
 
@@ -96,12 +97,13 @@ $data = array(); // Initialize the $data array
 $actionhtml = 'test';
 $getattribute = explode(',', $fields); $n=1;
 foreach ($empRecords as $row) {
-   
+  $action = '';
+  if($_COOKIE['user']=='administrador' || trim($_COOKIE['user'])=='god1') {
    $action = '
-   <a class="btn btn-light delete_process" data-toggle="modal" data-target="#modal-default" href="javascript:void(0);" data-delete-id=' . $row['id_certificado'] . '><i class="fas fa-times text-danger" aria-hidden="true"></i></a>
-
-   
- <a href="index.php?module=13&page=7&amp;s=' . $row['id_sensor'] . '" class="btn btn-secondary"><i class="fa fa-eye" aria-hidden="true"></i></a>
+   <a class="btn btn-light delete_process" data-toggle="modal" data-target="#modal-default" href="javascript:void(0);" data-delete-id=' . $row['id_certificado'] . ' data-delete-sensorid=' . $row['id_sensor'] . '><i class="fas fa-times text-danger" aria-hidden="true"></i></a>';
+  }
+   $action .= '
+  <a href="index.php?module=13&page=7&amp;s=' . $row['id_sensor'] . '" class="btn btn-secondary"><i class="fa fa-eye" aria-hidden="true"></i></a>
    <a href="index.php?module=13&page=6&amp;s=' . $row['id_sensor'] . '&idcert=' . $row['id_certificado'] . '" class="btn btn-primary"><i class="fa fa-pen" aria-hidden="true"></i></a>
    <a href="index.php?module=13&page=5&amp;s=' . $row['id_sensor'] . '" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i></a>';
 
@@ -153,11 +155,25 @@ foreach ($empRecords as $row) {
          $id_certificado = $row['id_certificado'];
           //  $certificateName = str_replace('/', '_', $certificateName); // Replace slashes with underscores
          
-         $pdfPath = "templates/certificados/{$row['id_sensor']}/{$certificateName}.pdf";
+          
+          $pdfPath = "templates/certificados/{$row['id_sensor']}/{$certificateName}.pdf";
             $pdfURL = $baseurl. '/' . $pdfPath;
-         if ($row['url']!='') {
-             $rowData[$attribute] = '<a target="_blank" href="' . $row['url'] . '">' . $rowData[$attribute] . '</a>';
-           } 
+
+          $sql_pdf_files = "SELECT * FROM sensores_certicados_ficheros WHERE id_certificado = '$id_certificado' ORDER BY
+          CASE WHEN tipo = 'Primario' THEN 1
+               WHEN tipo = 'Secundario' THEN 2
+               WHEN tipo = 'Vencido' THEN 3 
+          END,
+          nombre_archivo limit 1";
+          $result_pdf_files = $db_cms->select_query($sql_pdf_files);
+          
+          if (!empty($result_pdf_files)) {
+            $pdfFileName = $result_pdf_files[0]['nombre_archivo']; 
+            $pdfPath = "templates/certificados/{$row['id_sensor']}/{$pdfFileName}";
+            $pdfURL = $baseurl. '/' . $pdfPath;
+            $rowData[$attribute] = '<a target="_blank" href="' . $pdfPath . '">' . $rowData[$attribute] . '</a>';
+
+          }          
            else{
             $rowData[$attribute] = '<a target="_blank" href="' . $pdfPath . '">' . $rowData[$attribute] . '</a>';
 

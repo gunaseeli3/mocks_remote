@@ -68,23 +68,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Get row values
              
             $sensor_id = $_GET["sensor_id"];                         
-            $certificate = $rowData->current()->getValue();
+            $certificate = trim($rowData->current()->getValue());
             if ($certificate === null || trim($certificate) === '') {
                 // Skip processing this row and move to the next iteration
                 continue;
             }
             $rowData->next(); // Move to the next cell
-            $magnitude = $rowData->current()->getValue();
+            $magnitude = trim($rowData->current()->getValue());
             $rowData->next();
-            $issuedDate = $rowData->current()->getValue();
+            $issuedDate = trim($rowData->current()->getValue());
             $rowData->next();
-            $expiresDate = $rowData->current()->getValue();
+            $expiresDate = trim($rowData->current()->getValue());
             $rowData->next();
-            $status = $rowData->current()->getValue();
+            $status = trim($rowData->current()->getValue());
             $rowData->next();
-            $country = $rowData->current()->getValue();
+            $country = trim($rowData->current()->getValue());
             $rowData->next();
-            $tipo = $rowData->current()->getValue(); //get the "Tipo" value
+            $tipo = trim($rowData->current()->getValue()); //get the "Tipo" value
 
 
              // Determine the sensor_id to use for this row
@@ -311,7 +311,7 @@ $res_insert_file = $db_cms->add_query1($insertFileData, 'sensores_certicados_fic
             $date_time_action = date('Y-m-d H:i:s'); // Current date and time
 
             // Add more fields and values as needed
-            $field1 = "Sensor";
+            $field1 = "Sensor ID";
             $field1_value = $sensor_id;
             $field2 = "Nombre del certificado";
             $field2_value = $certificado;
@@ -331,7 +331,8 @@ $res_insert_file = $db_cms->add_query1($insertFileData, 'sensores_certicados_fic
             $field9_value = $tipo;
             
 
-            $url = "templates/certificados/{$sensor_id}/{$fileName}";
+            //$url = "templates/certificados/{$sensor_id}/{$fileName}";
+            $url = $fileName;
             $description = "$user $action el $date_time_action <br>"
                 . "$field1 - $field1_value<br>"
                 . "$field2 - $field2_value<br>"

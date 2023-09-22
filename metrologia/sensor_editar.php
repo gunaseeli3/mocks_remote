@@ -41,6 +41,10 @@ if (!empty($_POST["submit_action"]) && !empty($_POST["edit_action"])) {
         $date_time_action = date('Y-m-d H:i:s'); // Current date and time
 
 
+        // Assuming you have captured the Sensor ID from a form input
+$sensor_id = isset($cid) ? $cid : "";
+
+
 // Add more fields and values as needed
 $field1 = "Identificación del sensor";
 $field1_value = $_POST['nombre'];
@@ -56,6 +60,7 @@ $field6 = "Página";
 $field6_value = "EDITAR SENSOR";
 
 $description = "$user ha $action el $date_time_action<br>"
+. "Sensor ID - $sensor_id<br>"
 . "$field1 cambio de {$res_bf['nombre']} a $field1_value<br>"
 . "$field2 cambio de {$res_bf['serie']} a $field2_value<br>"
 . "$field3 cambio de {$res_bf['tipo']} a $field3_value<br>"

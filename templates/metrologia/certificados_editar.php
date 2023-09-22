@@ -7,13 +7,14 @@
  
      $mi_sensor = $res3['nombre'];
  }
- //error_reporting(E_ALL);
-  //ini_set('display_errors', 1);
+  error_reporting(E_ALL);
+ ini_set('display_errors', 1);
  $idcert=$_REQUEST['idcert'];
  $certificateId= $idcert;
  $_SESSION["status"] ='';
  $_SESSION["cms_msg"] ='';
-
+ 
+ $current_page = $_SERVER['REQUEST_URI'];
  
     function updateDatabaseAndBacktrack($certificateId, $sensorId, $tipo, $movedFileUrls) {
  
@@ -40,7 +41,7 @@
     $date_time_action = date('Y-m-d H:i:s'); // Current date and time
 
     // Add more fields and values as needed
-    $field1 = "Sensor ID";
+    $field1 = "Sensor";
     $field1_value = $_POST['id_sensor'];
     $field2 = "Nombre del certificado";
     $field2_value = $_POST['certificado'];
@@ -62,6 +63,7 @@
   
 
     $description = "$user ha $action el $date_time_action<br>"
+        . "Sensor ID - $sensorId<br>" 
         . "$field1 cambio de {$res_bf['id_sensor']} a $field1_value<br>"
         . "$field2 cambio de {$res_bf['certificado']} a $field2_value<br>"
         . "$field3 cambio de {$res_bf['fecha_emision']} a $field3_value<br>"
@@ -70,7 +72,7 @@
         . "$field6 cambio de {$res_bf['estado']} a $field6_value<br>"
         . "$field7 cambio de {$res_bf['id_certificado']} a $field7_value<br>"
         . "$field9 : $field9_value<br>"
-        . "Archivos cargados:<br>" . implode('<br>', $movedFileUrls) . "<br>"
+        . "Archivos cargados:<br>" . implode('</br>', $movedFileUrls) . "</br>"
         . "$field8 - $field8_value<br>";
 
     $description_base64 = base64_encode($description);
@@ -85,9 +87,26 @@
 
     $res_backtrack = $db_cms->add_query($backtrack_data, 'backtrack');
 
+
+    // Get the current URL
+$current_page = $_SERVER['REQUEST_URI'];
+
+// Extract the existing 's' parameter value (if it exists)
+preg_match('/[?&]s=([^&]+)/', $current_page, $matches);
+
+if (isset($matches[1])) {
+    // 's' parameter exists, replace it with the new value
+    $current_page = str_replace("s={$matches[1]}", "s=$sensorId", $current_page);
+} else {
+    // 's' parameter doesn't exist, add it to the URL
+    $current_page .= "&s=$sensorId";
+}
+
     if ($res_backtrack) {
         $_SESSION["cms_status"] = "success";
         $_SESSION["cms_msg"] = "Datos modificados con éxito";
+        header('Location:' . $current_page);
+        exit();
     } else {
         header('Location:' . $current_page);
         exit();
@@ -107,7 +126,13 @@ if (!empty($_POST["edit_action"])) {
     $certificateId = $_POST['idcert']; // Assuming you have this variable defined somewhere
 
     $certificateName = $_POST['certificado'];
-    $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : 'Primario';
+
+    if($_POST['estado']=="Vencido")
+    {
+        $_POST['tipo'] = 'Vencido';
+    }
+
+       $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : 'Primario';
 
 
 
@@ -125,7 +150,9 @@ if (!empty($_POST["edit_action"])) {
 
     $field = array();
     $fields_to_check = array("id_sensor", "certificado", "fecha_emision", "fecha_vencimiento", "pais", "estado");
-
+    
+    
+   
     foreach ($fields_to_check as $field_name) {
         if (!empty($_POST[$field_name])) {
             $field[$field_name] = $_POST[$field_name];
@@ -199,7 +226,7 @@ if (!empty($_POST["edit_action"])) {
                 $db_cms->update_query($update_sql);
             } else {
                 // Handle error if rename fails
-                echo "Error renaming file: $existingFileName";
+              //  echo "Error renaming file: $existingFileName";
             }
         }
     }
@@ -211,6 +238,9 @@ if (!empty($_POST["edit_action"])) {
 
              // Determine the filename based on tipo
              if ($tipo === 'Primario') {
+        // Determine the new filename based on tipo and index
+        $newFileName = "{$certificateName}.pdf";
+     
 
 // Get the existing files for the certificate
 $sql_existing_files = "SELECT * FROM sensores_certicados_ficheros WHERE id_certificado = '$certificateId' ORDER BY id ASC";
@@ -219,17 +249,35 @@ $existing_files = $db_cms->select_query($sql_existing_files);
 if ($existing_files !== false) {
     //$next_index = 2; // Starting index for updating Secundario filenames
 
+  
+
      // Fetch the maximum index for Secundario files
      $sql_max_secundario_index = "SELECT MAX(SUBSTRING_INDEX(SUBSTRING_INDEX(nombre_archivo, '_', -1), '.', 1)) AS max_index FROM sensores_certicados_ficheros WHERE tipo = 'Secundario' and id_certificado='$certificateId'";
      $result_max_secundario_index = $db_cms->select_query($sql_max_secundario_index);
      $max_secundario_index = intval($result_max_secundario_index[0]['max_index']);
 
-     // Calculate the next index for Secundario files
-     if ($max_secundario_index == 0) {
-         $next_index = $max_secundario_index + 2;
-     } else {
-         $next_index = $max_secundario_index + 1;
-     }
+
+     // Check if a primary file already exists for the certificate
+    $sql_primary_file_exists = "SELECT COUNT(*) AS primary_file_count FROM sensores_certicados_ficheros WHERE tipo = 'Primario' AND id_certificado='$certificateId'";
+    $result_primary_file_exists = $db_cms->select_query($sql_primary_file_exists);
+    $primary_file_count = intval($result_primary_file_exists[0]['primary_file_count']);
+
+
+    // Calculate the next index for Secundario files
+    if ($primary_file_count > 0) {
+        if ($max_secundario_index == 0) {
+            $next_index = $max_secundario_index + 2;
+        } else {
+            $next_index = $max_secundario_index + 1;
+        }
+    } else {
+        if ($max_secundario_index == 0) {
+            $next_index = $max_secundario_index + 2;
+        } else {
+            $next_index = $max_secundario_index;
+        }
+    }
+
      
  
 
@@ -237,6 +285,8 @@ if ($existing_files !== false) {
         $existing_id = $existing_file['id'];
         $existing_nombre_archivo = $existing_file['nombre_archivo'];
         $existing_tipo = $existing_file['tipo'];
+
+        
 
         if ($existing_tipo === 'Secundario') {
             $new_nombre_archivo = "{$certificateName}_{$next_index}.pdf";
@@ -261,9 +311,16 @@ if ($existing_files !== false) {
             $new_nombre_archivo = $existing_nombre_archivo;
         }
 
+        // Rename the file in the file system
+        $oldFilePath = $uploadDir . '/' . $existing_nombre_archivo;
+        $newFilePath = $uploadDir . '/' . $new_nombre_archivo;
+
+        if (rename($oldFilePath, $newFilePath)) {
+
         // Update the record with the new filename and tipo
         $update_sql = "UPDATE sensores_certicados_ficheros SET nombre_archivo = '$new_nombre_archivo', tipo = '$existing_tipo' WHERE id = '$existing_id'";
         $db_cms->update_query($update_sql);
+        }
     }
 }
 
@@ -334,7 +391,8 @@ if ($max_secundario_index == 0 && $max_vencido_index == 0) {
             $movefileResult = move_uploaded_file($pdfFiles[$i], $destination);
 
             if ($movefileResult) {
-                $movedFileUrls[] = $destination;
+                //$movedFileUrls[] = $destination;
+                $movedFileUrls[] = $fileName;
 
                 // Insert or update the database entry for the uploaded file
                 $insert_data = array(
@@ -443,6 +501,7 @@ require_once 'includes/sensorlists.php';
                 <div class="btn-actions-pane-right">
                 
                     <a href="index.php?module=13&page=4&s=-" class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-danger"><i class="fa-solid fa-x"></i> Cancelar</a>
+                    <a href="index.php?module=13&page=9&s=<?=$sensor_existid?>"><button class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-success"><i class="fa fa-pen"></i> Editar Sensor</button></a>
                     <a href="index.php?module=13&page=11&s=<?php echo $sensor_existid; ?>&k=0" class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-primary"><i class="fa-solid fa-cloud-arrow-up btn-icon-wrapper"></i> Carga masiva</a>
                    
 
@@ -507,9 +566,9 @@ $baseurl = getBaseURL();
                             <div class="position-relative form-group">
                                 <label for="examplePassword11" class="" >Estado</label>
                                 <select class="form-control" name="estado" required>
-                                    <option value="Vigente">Vigente</option>
-                                    <option value="Vencido">Vencido</option>
-                                </select>
+            <option value="Vigente"<?php if ($res['estado'] === 'Vigente') echo ' selected'; ?>>Vigente</option>
+            <option value="Vencido"<?php if ($res['estado'] === 'Vencido') echo ' selected'; ?>>Vencido</option>
+        </select>
                             </div>
                         </div>
 <?php
@@ -529,7 +588,7 @@ $baseurl = getBaseURL();
     <p>Elija el tipo de certificado:</p>
     <input type="radio" name="tipo" value="Primario" > Primario
     <input type="radio" name="tipo" value="Secundario"> Secundario
-    <input type="radio" name="tipo" value="Vencido"> Vencido
+     
     
 </div>
                             
@@ -654,6 +713,37 @@ if (!empty($result_pdf_files)) {
  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
  <script>
 $(document).ready(function () {
+
+    var sensorData = <?php echo json_encode($sensor_data); ?>;
+        var sensorList = $("#sensor_list");
+
+       
+
+
+         // Populate the dropdown with sensor data
+         sensorData.forEach(function (sensor) {
+            var option = $("<option>").attr("data-value", sensor.id_sensor).text(sensor.nombre);
+            sensorList.append(option);
+        });
+
+
+        $("#sensor_dropdown").on("input", function () {
+            var searchText = $(this).val().toLowerCase();
+            sensorList.find("option").each(function () {
+                var optionText = $(this).text().toLowerCase();
+                // Use 'nombre' for searching, but keep the value as 'id_sensor'
+                $(this).toggle(optionText.indexOf(searchText) > -1);
+            });
+        });
+
+        // Handle selection change to update the hidden field
+        $("#sensor_dropdown").change(function () {
+            var selectedValue = $(this).val();
+            var selectedIdSensor = sensorList.find("option:contains('" + selectedValue + "')").attr("data-value");
+            $("#selected_sensor_id").val(selectedIdSensor);
+        });
+    
+
      
 
     $('#form2').submit(function (e) {
@@ -677,12 +767,24 @@ $(document).ready(function () {
             }
         }
 
-        if ($('#pdf_file').val() !== '') { // Check if a PDF file is selected
-    if (!$('input[name="tipo"]:checked').length) {
+         // Check if a PDF file is selected
+         if ($('#pdf_file')[0].files.length > 0) {
+    // At least one file is selected
+    // Check other conditions and handle accordingly
+    var estado = $('select[name="estado"]').val();
+     
+    if (estado === 'Vencido') {
+        // Allow form submission
+        return;
+    } else if (!$('input[name="tipo"]:checked').length) {
+        // If no tipo is selected and estado is not "Vencido," alert the user and prevent form submission
         alert("Seleccione el tipo de certificado.");
-        return false;
+        e.preventDefault();
+        return;
     }
 }
+
+    
 
         // Show the confirmation modal
         $('#confirmationModal').modal('show');
@@ -702,7 +804,7 @@ $(document).ready(function () {
 
     // Handle user's choice in confirmation modal
     $('#confirmUploadButton').click(function () {
-        alert('Certificado primario elegido.');
+        //alert('Certificado primario elegido.');
         $('#form2').unbind('submit').submit(); // Allow form submission
     });
 

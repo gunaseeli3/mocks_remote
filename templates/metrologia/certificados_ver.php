@@ -11,8 +11,8 @@ $res=$db_cms->select_query_with_row($sql);
 <div class="row">
     <div class="col-sm-7">
         <div class="card">
-            <div class="card-header">
-                <h2>Información del sensor <?php echo $res['nombre']; ?></h2>
+            <div class="card-header" style='display: contents;'>
+                <h2 style='margin-left: 10px;'>Información del sensor <?php echo $res['nombre']; ?></h2>
                 <div class="btn-actions-pane-right">
                     <a href="?module=13&page=4" class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-primary"><i class="fa-solid fa-arrow-left"></i> Volver</a>
                     <a href="index.php?module=13&page=9&s=<?=$cid?>"><button class="mb-2 mr-2 btn-icon btn-shadow btn-outline-2x btn btn-outline-success"><i class="fa fa-pen"></i> Editar</button></a>
@@ -48,7 +48,17 @@ $res=$db_cms->select_query_with_row($sql);
                     </div> -->
                 </form>
                 <br><br>
-                <h3>Histórico de certificados</h3>
+                <div class='form-row' style='margin-bottom: 10px;'>
+                <div class="col-md-8">
+                        
+                <h3>Histórico de certificados</h3> </div>
+                <div class="col-md-4">
+                <a href='index.php?module=13&page=5&s=<?=$cid?>'>
+                        <button class='mb-2 mr-2 btn-icon btn-square btn btn-primary form-control' style="height: auto;">
+                        Añadir un nuevo certificado
+                        </button></a>
+</div> </div> 
+
                 <div class="col-md-12">
                     <div id="accordion" class="accordion-wrapper mb-3">
                         <?php
@@ -75,45 +85,23 @@ if (!empty($result_certificates)) {
     $baseurl = getBaseURL();
     $pdfPath = "templates/certificados/{$cid}/{$certif}.pdf";
             $pdfURL = $baseurl. '/' . $pdfPath;
-
+$n=$i+1;
         echo "
         <div class='card'>
         <div id='headingOne' class='card-header'>
-        <button type='button' data-toggle='collapse' data-target='#collapseOne_$ides' aria-expanded='true' aria-controls='collapseOne' class='text-left m-0 p-0 btn btn-link btn-block'>
-            <h5 class='m-0 p-0'>$ides - <a href='$pdfURL' target='_blank'>$certif</a></h5>
+        <button type='button' data-toggle='collapse' data-target='#collapseOne_$ides' aria-expanded='true' aria-controls='collapseOne' class='text-left m-0 p-0 btn btn-link btn-block custom-button-width'>
+            <h5 class='m-0 p-0'>$n - $certif</h5>
         </button>
+        <a href='index.php?module=13&page=6&s={$cid}&idcert={$ides}'>
+            <button class='mb-1 mr-1 btn-icon btn-shadow btn-outline-2x btn btn-outline-success'>
+                <i class='fa fa-pen'></i> Editar
+            </button>
+        </a>
     </div>
+    
             <div data-parent='#accordion' id='collapseOne_$ides' aria-labelledby='headingOne' class='collapse $expand'>
                 <div class='card-body'>
-                    <div class='form-row' style='margin-bottom: 10px;'>
-                <div class='col-md-3'>
-                    <div class='position-relative form-group'>
-                        <label for='exampleEmail11'>Fecha de emisión:</label>
-                        <span class='form-control' style='font-size: 14px;'> </span>
-                    </div>
-                </div>
-                <div class='col-md-3'>
-                    <div class='position-relative form-group'>
-                        <label for='exampleEmail11'>Fecha de vencimiento:</label>
-                        <span class='form-control' style='font-size: 14px;' > </span>
-                    </div>
-                </div>
-                <div class='col-md-3'>
-                    <div class='position-relative form-group'>
-                        <label for='exampleEmail11'>En sistema desde:</label>
-                        <span class='form-control' style='font-size: 14px;'> </span>
-                    </div>
-                </div>
-                <div class='col-md-3'>
-                    <div class='position-relative form-group'>
-                        <label for='exampleEmail11'>Cargar PDF:</label>
-                        <a href='index.php?module=13&page=11&s=$cid&k=0'>
-                        <button class='mb-2 mr-2 btn-icon btn-square btn btn-primary form-control'>
-                            <i class='fa-solid fa-cloud-arrow-up btn-icon-wrapper'></i>
-                            <i class='fa-regular fa-file-pdf btn-icon-wrapper'></i>
-                        </button></a>
-                    </div>
-                </div>
+                    
                 
                             ";
 
@@ -214,7 +202,7 @@ else {
         //     echo "No associated PDF files.";
         // }
         echo "         
-                    </div>
+                   
                 </div>
             </div>
         </div>";
@@ -266,7 +254,7 @@ else {
             $.ajax({
                 url: 'templates/metrologia/includes/get_audit_log.php',
                 type: 'GET',
-                data: { page: page },
+                data: { page: page, s: '<?php echo $cid; ?>' },
                 success: function (data) {
                     $('#accordion2').html(data.entries);
                     $('#pagination2').html(data.pagination);
@@ -354,5 +342,10 @@ else {
     color: #fff;
     border-color: #007bff;
 }
+
+.custom-button-width {
+    width: 75%;
+}
+
 
     </style>

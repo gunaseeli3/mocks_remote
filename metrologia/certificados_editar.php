@@ -7,14 +7,14 @@
  
      $mi_sensor = $res3['nombre'];
  }
- //error_reporting(E_ALL);
-  //ini_set('display_errors', 1);
+  error_reporting(E_ALL);
+ ini_set('display_errors', 1);
  $idcert=$_REQUEST['idcert'];
  $certificateId= $idcert;
  $_SESSION["status"] ='';
  $_SESSION["cms_msg"] ='';
  
-
+ $current_page = $_SERVER['REQUEST_URI'];
  
     function updateDatabaseAndBacktrack($certificateId, $sensorId, $tipo, $movedFileUrls) {
  
@@ -41,7 +41,7 @@
     $date_time_action = date('Y-m-d H:i:s'); // Current date and time
 
     // Add more fields and values as needed
-    $field1 = "Sensor ID";
+    $field1 = "Sensor";
     $field1_value = $_POST['id_sensor'];
     $field2 = "Nombre del certificado";
     $field2_value = $_POST['certificado'];
@@ -63,6 +63,7 @@
   
 
     $description = "$user ha $action el $date_time_action<br>"
+        . "Sensor ID - $sensorId<br>" 
         . "$field1 cambio de {$res_bf['id_sensor']} a $field1_value<br>"
         . "$field2 cambio de {$res_bf['certificado']} a $field2_value<br>"
         . "$field3 cambio de {$res_bf['fecha_emision']} a $field3_value<br>"
@@ -71,7 +72,7 @@
         . "$field6 cambio de {$res_bf['estado']} a $field6_value<br>"
         . "$field7 cambio de {$res_bf['id_certificado']} a $field7_value<br>"
         . "$field9 : $field9_value<br>"
-        . "Archivos cargados:<br>" . implode('<br>', $movedFileUrls) . "<br>"
+        . "Archivos cargados:<br>" . implode('</br>', $movedFileUrls) . "</br>"
         . "$field8 - $field8_value<br>";
 
     $description_base64 = base64_encode($description);
@@ -86,9 +87,26 @@
 
     $res_backtrack = $db_cms->add_query($backtrack_data, 'backtrack');
 
+
+    // Get the current URL
+$current_page = $_SERVER['REQUEST_URI'];
+
+// Extract the existing 's' parameter value (if it exists)
+preg_match('/[?&]s=([^&]+)/', $current_page, $matches);
+
+if (isset($matches[1])) {
+    // 's' parameter exists, replace it with the new value
+    $current_page = str_replace("s={$matches[1]}", "s=$sensorId", $current_page);
+} else {
+    // 's' parameter doesn't exist, add it to the URL
+    $current_page .= "&s=$sensorId";
+}
+
     if ($res_backtrack) {
         $_SESSION["cms_status"] = "success";
         $_SESSION["cms_msg"] = "Datos modificados con éxito";
+        header('Location:' . $current_page);
+        exit();
     } else {
         header('Location:' . $current_page);
         exit();
@@ -108,7 +126,13 @@ if (!empty($_POST["edit_action"])) {
     $certificateId = $_POST['idcert']; // Assuming you have this variable defined somewhere
 
     $certificateName = $_POST['certificado'];
-    $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : 'Primario';
+
+    if($_POST['estado']=="Vencido")
+    {
+        $_POST['tipo'] = 'Vencido';
+    }
+
+       $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : 'Primario';
 
 
 
@@ -126,7 +150,9 @@ if (!empty($_POST["edit_action"])) {
 
     $field = array();
     $fields_to_check = array("id_sensor", "certificado", "fecha_emision", "fecha_vencimiento", "pais", "estado");
-
+    
+    
+   
     foreach ($fields_to_check as $field_name) {
         if (!empty($_POST[$field_name])) {
             $field[$field_name] = $_POST[$field_name];
@@ -365,7 +391,8 @@ if ($max_secundario_index == 0 && $max_vencido_index == 0) {
             $movefileResult = move_uploaded_file($pdfFiles[$i], $destination);
 
             if ($movefileResult) {
-                $movedFileUrls[] = $destination;
+                //$movedFileUrls[] = $destination;
+                $movedFileUrls[] = $fileName;
 
                 // Insert or update the database entry for the uploaded file
                 $insert_data = array(
@@ -539,9 +566,9 @@ $baseurl = getBaseURL();
                             <div class="position-relative form-group">
                                 <label for="examplePassword11" class="" >Estado</label>
                                 <select class="form-control" name="estado" required>
-                                    <option value="Vigente">Vigente</option>
-                                    <option value="Vencido">Vencido</option>
-                                </select>
+            <option value="Vigente"<?php if ($res['estado'] === 'Vigente') echo ' selected'; ?>>Vigente</option>
+            <option value="Vencido"<?php if ($res['estado'] === 'Vencido') echo ' selected'; ?>>Vencido</option>
+        </select>
                             </div>
                         </div>
 <?php
@@ -561,7 +588,7 @@ $baseurl = getBaseURL();
     <p>Elija el tipo de certificado:</p>
     <input type="radio" name="tipo" value="Primario" > Primario
     <input type="radio" name="tipo" value="Secundario"> Secundario
-    <input type="radio" name="tipo" value="Vencido"> Vencido
+     
     
 </div>
                             
@@ -740,12 +767,24 @@ $(document).ready(function () {
             }
         }
 
-        if ($('#pdf_file').val() !== '') { // Check if a PDF file is selected
-    if (!$('input[name="tipo"]:checked').length) {
+         // Check if a PDF file is selected
+         if ($('#pdf_file')[0].files.length > 0) {
+    // At least one file is selected
+    // Check other conditions and handle accordingly
+    var estado = $('select[name="estado"]').val();
+     
+    if (estado === 'Vencido') {
+        // Allow form submission
+        return;
+    } else if (!$('input[name="tipo"]:checked').length) {
+        // If no tipo is selected and estado is not "Vencido," alert the user and prevent form submission
         alert("Seleccione el tipo de certificado.");
-        return false;
+        e.preventDefault();
+        return;
     }
 }
+
+    
 
         // Show the confirmation modal
         $('#confirmationModal').modal('show');
@@ -765,7 +804,7 @@ $(document).ready(function () {
 
     // Handle user's choice in confirmation modal
     $('#confirmUploadButton').click(function () {
-        alert('Certificado primario elegido.');
+        //alert('Certificado primario elegido.');
         $('#form2').unbind('submit').submit(); // Allow form submission
     });
 

@@ -104,8 +104,7 @@ $baseurl = getBaseURL();
                     <td><strong>Id Sensor</strong></td>              
                     <td><strong>Sensor</strong></td>
                     <td><strong>No. Serie</strong></td>
-                    <td><strong>Estado</strong></td>
-                    <td><strong>Id Certificado</strong></td>                    
+                    <td><strong>Estado</strong></td>                                  
                     <td><strong>Certificado</strong></td>
                     <td><strong>Vence el</strong></td>
                     <td><strong>Días</strong></td>                      
@@ -167,7 +166,7 @@ $(document).ready(function() {
       'data': function(d) {
         // Add additional data to the AJAX request        
         d.pagename = "certifacados";        
-        d.fields = "id_sensor,Sensor,noSerie,Estado,id_certificado,Certificado,Vence el,Días";
+        d.fields = "id_sensor,Sensor,noSerie,Estado,Certificado,Vence el,Días";
         d.table_name ="sensores_certificados";
         d.baseurl="<?=$baseurl?>";
         d.whereCondition  = "";
@@ -177,8 +176,7 @@ $(document).ready(function() {
       {data: 'id_sensor'},
       {data: 'Sensor'},
       {data: 'noSerie'},
-      {data: 'Estado'},
-      {data: 'id_certificado'},     
+      {data: 'Estado'},      
       {data: 'Certificado'},
       {data: 'Vence el'},
       {data: 'Días'},
@@ -188,13 +186,16 @@ $(document).ready(function() {
   $(document).on('click', '.delete_process', function() {
     // Retrieve the data-delete-id attribute value
     var deleteId = $(this).data('delete-id');
+    var deletesensoridId = $(this).data('delete-sensorid');
 
     // Display the modal
     //$('#modal-default').modal('show');    
     
-    // Set the action when the proceed button is clicked in the modal
-    
-    $('#del_proceed').attr('href', '?module=13&page=4&s=-&action2=delete&id=' + deleteId);
+    // Set the action when the proceed button is clicked in the modal   
+ 
+
+    $('#del_proceed').attr('href', '?module=13&page=4&s=-&action2=delete&id=' + deleteId + '&sensor_id=' + deletesensoridId);
+
 
     
 
