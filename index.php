@@ -1,32 +1,10 @@
 <?php  
 ////// DESDE VISUAL A CERNET   DESCE CERNET a Visua test
 //LLAMADA AL ARCHIVO PRINCIPAL DE ACCESO A BASE DE DATOS E INTEGRACION DE SMARTY
-error_reporting(0); //develop changes
-ob_start(); //ob start call
+error_reporting(0);
+ob_start();
 include("config.ini.php");
- //A added
- //B added
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
- //update another one
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
- //working on develop
- //working some other
->>>>>>> Stashed changes
-=======
-
- //update fot git stash
->>>>>>> Stashed changes
-=======
-
- //update fot git stash
->>>>>>> Stashed changes
-=======
- //working on develop
- //working some other
->>>>>>> Stashed changes
+ 
 $current_page = $_SERVER['REQUEST_URI'];
 
 session_start();//start session
